@@ -3,37 +3,39 @@ import React from "react";
 import { TaskType } from "../types/TaskType";
 import { Checkbox, Text, useTheme } from "react-native-paper";
 import { SIZES } from "../constants/theme";
-import { MaterialIcons } from "@expo/vector-icons";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 interface TaskItemProps {
   task: TaskType;
-  onComplete: (taskId: number) => void;
-  onDelete: (taskId: number) => void;
+  backgroundColor: string;
+  onPress: (taskId: number) => void;
+  onLongPress: (taskId: number) => void;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onDelete }) => {
+const TaskItem: React.FC<TaskItemProps> = ({
+  task,
+  onPress,
+  onLongPress,
+  backgroundColor,
+}) => {
   const theme = useTheme();
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: SIZES.medium,
-        margin: SIZES.xSmall,
-        borderRadius: SIZES.small,
-        backgroundColor: theme.colors.secondaryContainer,
-      }}
-      onTouchEnd={() => {
-        onComplete(task.id);
-      }}
-    >
-      <View
+    <View>
+      <TouchableOpacity
         style={{
           flex: 1,
           flexDirection: "row",
           alignItems: "center",
+          padding: SIZES.medium,
+          margin: SIZES.xSmall,
+          borderRadius: SIZES.small,
+          backgroundColor: backgroundColor,
+        }}
+        onLongPress={() => {
+          onLongPress(task.id);
+        }}
+        onPress={() => {
+          onPress(task.id);
         }}
       >
         <Checkbox status={task.isCompleted ? "checked" : "unchecked"} />
@@ -45,14 +47,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onDelete }) => {
         >
           {task.getTaskContent()}
         </Text>
-      </View>
-      <View
-        onTouchEnd={() => {
-          onDelete(task.id);
-        }}
-      >
-        <MaterialIcons name="delete" size={20} color={theme.colors.error} />
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };

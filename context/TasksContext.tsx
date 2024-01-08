@@ -47,6 +47,8 @@ export enum TasksActionKind {
   ADD_TASK = "ADD_TASK",
   TOGGLE_TASK = "TOGGLE_TASK",
   DELETE_TASK = "DELETE_TASK",
+  DELETE_TASKS = "DELETE_TASKS",
+  UPDATE_TASK = "UPDATE_TASK",
 }
 
 interface TasksAction {
@@ -69,8 +71,19 @@ const tasksReducer = (state: TaskType[], action: TasksAction) => {
         return task;
       });
     }
+    case "UPDATE_TASK": {
+      return state.map((task) => {
+        if (task.id === action.payload.id) {
+          task.taskContent = action.payload.taskContent;
+        }
+        return task;
+      });
+    }
     case "DELETE_TASK": {
       return state.filter((task) => task.id !== action.payload);
+    }
+    case "DELETE_TASKS": {
+      return state.filter((task) => !action.payload.includes(task.id));
     }
     default: {
       throw new Error(`Unhandled action type: ${action.type}`);

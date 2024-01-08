@@ -1,35 +1,149 @@
-import { ScrollView } from "react-native";
-import React from "react";
+import { ScrollView, View, BackHandler } from "react-native";
+import { useState, useCallback, useEffect } from "react";
 import TaskItem from "./TaskItem";
 import {
   TasksActionKind,
   useTasks,
   useTasksDispatch,
 } from "../context/TasksContext";
+import { useTheme } from "react-native-paper";
+import { Link, Stack, useFocusEffect } from "expo-router";
+import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 
 const TaskList = () => {
   const tasks = useTasks();
+  const theme = useTheme();
   const tasksDispatch = useTasksDispatch();
-  const handleOnComplete = (taskId: number) => {
+  const [inSelectionMode, setInSelectionMode] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<number[]>([]);
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (inSelectionMode) {
+          setSelectedTaskIds([]);
+          setInSelectionMode(false);
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress
+      );
+
+      return () => subscription.remove();
+    }, [inSelectionMode])
+  );
+  // exit selection mode after coming back from edit screen
+  useEffect(() => {
+    if (inSelectionMode) {
+      setSelectedTaskIds([]);
+      setInSelectionMode(false);
+    }
+  }, [tasks]);
+  const handleOnPress = (taskId: number) => {
+    if (inSelectionMode) {
+      handleOnLongPress(taskId);
+      return;
+    }
     tasksDispatch({
       type: TasksActionKind.TOGGLE_TASK,
       payload: taskId,
     });
   };
-  const handleOnDelete = (taskId: number) => {
-    tasksDispatch({
-      type: TasksActionKind.DELETE_TASK,
-      payload: taskId,
-    });
+  const handleOnLongPress = (taskId: number) => {
+    if (selectedTaskIds.includes(taskId)) {
+      if (selectedTaskIds.length === 1) {
+        setInSelectionMode(false);
+      }
+      setSelectedTaskIds(selectedTaskIds.filter((id) => id !== taskId));
+      return;
+    }
+    setSelectedTaskIds([...selectedTaskIds, taskId]);
+    setInSelectionMode(true);
   };
   return (
     <ScrollView>
+      <Stack.Screen
+        options={{
+          headerTitle:
+            selectedTaskIds.length > 0 ? `${selectedTaskIds.length}` : "Tasks",
+          headerLeft: () => {
+            return (
+              inSelectionMode && (
+                <View
+                  onTouchEnd={() => {
+                    setSelectedTaskIds([]);
+                    setInSelectionMode(false);
+                  }}
+                  style={{
+                    paddingEnd: 24,
+                  }}
+                >
+                  <AntDesign
+                    name="arrowleft"
+                    size={24}
+                    color={theme.colors.onPrimaryContainer}
+                  />
+                </View>
+              )
+            );
+          },
+          headerRight: () => {
+            return (
+              inSelectionMode && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 30,
+                  }}
+                >
+                  <View
+                    onTouchEnd={() => {
+                      tasksDispatch({
+                        type: TasksActionKind.DELETE_TASKS,
+                        payload: selectedTaskIds,
+                      });
+                      setSelectedTaskIds([]);
+                      setInSelectionMode(false);
+                    }}
+                  >
+                    <MaterialIcons
+                      name="delete"
+                      size={24}
+                      color={theme.colors.onPrimaryContainer}
+                    />
+                  </View>
+                  {selectedTaskIds.length === 1 && (
+                    <View>
+                      <Link href={`/edit-task/${selectedTaskIds[0]}`}>
+                        <MaterialIcons
+                          name="edit"
+                          size={24}
+                          color={theme.colors.onPrimaryContainer}
+                        />
+                      </Link>
+                    </View>
+                  )}
+                </View>
+              )
+            );
+          },
+        }}
+      />
       {tasks.map((task) => (
         <TaskItem
           key={task.id}
           task={task}
-          onComplete={handleOnComplete}
-          onDelete={handleOnDelete}
+          onPress={handleOnPress}
+          onLongPress={handleOnLongPress}
+          backgroundColor={
+            selectedTaskIds.includes(task.id)
+              ? theme.colors.secondaryContainer
+              : theme.colors.surface
+          }
         />
       ))}
     </ScrollView>
