@@ -12,11 +12,7 @@ const TasksContext = createContext<TaskType[] | null>(null);
 const TasksDispatchContext = createContext<Dispatch<TasksAction> | null>(null);
 
 export const TasksProvider = ({ children }: PropsWithChildren<{}>) => {
-  const [tasks, dispatch] = useReducer(tasksReducer, [
-    new Task(1, "Task 1"),
-    new Task(2, "Task 2"),
-    new Task(3, "Task 3"),
-  ]);
+  const [tasks, dispatch] = useReducer(tasksReducer, []);
 
   return (
     <TasksContext.Provider value={tasks}>
@@ -44,6 +40,7 @@ export const useTasksDispatch = () => {
 };
 
 export enum TasksActionKind {
+  SET_TASKS = "SET_TASKS",
   ADD_TASK = "ADD_TASK",
   TOGGLE_TASK = "TOGGLE_TASK",
   DELETE_TASK = "DELETE_TASK",
@@ -58,8 +55,14 @@ interface TasksAction {
 
 const tasksReducer = (state: TaskType[], action: TasksAction) => {
   switch (action.type) {
+    case "SET_TASKS": {
+      return action.payload;
+    }
     case "ADD_TASK": {
-      return [...state, new Task(Date.now(), action.payload)];
+      return [
+        ...state,
+        new Task(action.payload.id, action.payload.taskContent),
+      ];
     }
     case "TOGGLE_TASK": {
       return state.map((task) => {

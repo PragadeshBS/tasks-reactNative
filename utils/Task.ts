@@ -1,11 +1,11 @@
 import { TaskType } from "../types/TaskType";
 
 export class Task implements TaskType {
-    id: number;
+    id: string;
     taskContent: string;
     isCompleted: boolean;
 
-    constructor(id: number, taskContent: string, isCompleted = false) {
+    constructor(id: string, taskContent: string, isCompleted = false) {
         this.id = id;
         this.taskContent = taskContent;
         this.isCompleted = isCompleted;

@@ -1,15 +1,15 @@
 import { View } from "react-native";
 import React from "react";
 import { TaskType } from "../types/TaskType";
-import { Checkbox, Text, useTheme } from "react-native-paper";
+import { Checkbox, Text } from "react-native-paper";
 import { SIZES } from "../constants/theme";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
 interface TaskItemProps {
   task: TaskType;
   backgroundColor: string;
-  onPress: (taskId: number) => void;
-  onLongPress: (taskId: number) => void;
+  onPress: (taskId: string) => void;
+  onLongPress: (taskId: string) => void;
 }
 
 const TaskItem: React.FC<TaskItemProps> = ({
@@ -18,7 +18,6 @@ const TaskItem: React.FC<TaskItemProps> = ({
   onLongPress,
   backgroundColor,
 }) => {
-  const theme = useTheme();
   return (
     <View>
       <TouchableOpacity

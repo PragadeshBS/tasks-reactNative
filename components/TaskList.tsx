@@ -9,13 +9,14 @@ import {
 import { useTheme } from "react-native-paper";
 import { Link, Stack, useFocusEffect } from "expo-router";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
+import firestore from "@react-native-firebase/firestore";
 
 const TaskList = () => {
   const tasks = useTasks();
   const theme = useTheme();
   const tasksDispatch = useTasksDispatch();
   const [inSelectionMode, setInSelectionMode] = useState(false);
-  const [selectedTaskIds, setSelectedTaskIds] = useState<number[]>([]);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
@@ -43,7 +44,7 @@ const TaskList = () => {
       setInSelectionMode(false);
     }
   }, [tasks]);
-  const handleOnPress = (taskId: number) => {
+  const handleOnPress = (taskId: string) => {
     if (inSelectionMode) {
       handleOnLongPress(taskId);
       return;
@@ -53,7 +54,7 @@ const TaskList = () => {
       payload: taskId,
     });
   };
-  const handleOnLongPress = (taskId: number) => {
+  const handleOnLongPress = (taskId: string) => {
     if (selectedTaskIds.includes(taskId)) {
       if (selectedTaskIds.length === 1) {
         setInSelectionMode(false);
@@ -102,10 +103,18 @@ const TaskList = () => {
                 >
                   <View
                     onTouchEnd={() => {
-                      tasksDispatch({
-                        type: TasksActionKind.DELETE_TASKS,
-                        payload: selectedTaskIds,
-                      });
+                      selectedTaskIds.forEach((taskId) =>
+                        firestore()
+                          .collection("tasks")
+                          .doc(taskId)
+                          .delete()
+                          .then(() => {
+                            tasksDispatch({
+                              type: TasksActionKind.DELETE_TASK,
+                              payload: taskId,
+                            });
+                          })
+                      );
                       setSelectedTaskIds([]);
                       setInSelectionMode(false);
                     }}

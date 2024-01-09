@@ -8,29 +8,41 @@ import {
   useTasks,
   useTasksDispatch,
 } from "../../context/TasksContext";
+import firestore from "@react-native-firebase/firestore";
 
 export default function Page() {
   const { id } = useLocalSearchParams();
+  if (typeof id !== "string") {
+    throw new Error("id is not a string");
+  }
   const theme = useTheme();
   const router = useRouter();
   const tasksDispatch = useTasksDispatch();
   const tasks = useTasks();
-  const [taskTitle, setTaskTitle] = useState("");
-  const handleAddTask = () => {
-    tasksDispatch({
-      type: TasksActionKind.UPDATE_TASK,
-      payload: {
-        id: Number(id),
-        taskContent: taskTitle,
-      },
-    });
-    setTaskTitle("");
-    router.back();
+  const [taskContent, setTaskContent] = useState("");
+  const handleUpdateTask = () => {
+    firestore()
+      .collection("tasks")
+      .doc(id)
+      .update({
+        taskContent,
+      })
+      .then(() => {
+        tasksDispatch({
+          type: TasksActionKind.UPDATE_TASK,
+          payload: {
+            id,
+            taskContent,
+          },
+        });
+        setTaskContent("");
+        router.back();
+      });
   };
   useEffect(() => {
-    const task = tasks.find((task) => task.id === Number(id));
+    const task = tasks.find((task) => task.id === id);
     if (task) {
-      setTaskTitle(task.taskContent);
+      setTaskContent(task.taskContent);
     } else {
       router.back();
     }
@@ -62,8 +74,8 @@ export default function Page() {
         >
           <TextInput
             label="Task Title"
-            value={taskTitle}
-            onChangeText={setTaskTitle}
+            value={taskContent}
+            onChangeText={setTaskContent}
           />
         </KeyboardAvoidingView>
         <Button
@@ -71,7 +83,7 @@ export default function Page() {
           style={{
             margin: 16,
           }}
-          onPress={handleAddTask}
+          onPress={handleUpdateTask}
         >
           Update
         </Button>

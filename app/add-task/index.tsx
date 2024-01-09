@@ -4,19 +4,30 @@ import { Button, useTheme, TextInput } from "react-native-paper";
 import { useState } from "react";
 import { View, KeyboardAvoidingView } from "react-native";
 import { TasksActionKind, useTasksDispatch } from "../../context/TasksContext";
+import firestore from "@react-native-firebase/firestore";
 
 export default function Page() {
   const theme = useTheme();
   const router = useRouter();
   const tasksDispatch = useTasksDispatch();
-  const [taskTitle, setTaskTitle] = useState("");
+  const [taskContent, setTaskContent] = useState("");
   const handleAddTask = () => {
-    tasksDispatch({
-      type: TasksActionKind.ADD_TASK,
-      payload: taskTitle,
-    });
-    setTaskTitle("");
-    router.back();
+    firestore()
+      .collection("tasks")
+      .add({
+        taskContent,
+      })
+      .then((documentReference) => {
+        tasksDispatch({
+          type: TasksActionKind.ADD_TASK,
+          payload: {
+            id: documentReference.id,
+            taskContent,
+          },
+        });
+        setTaskContent("");
+        router.back();
+      });
   };
   return (
     <SafeAreaView
@@ -45,8 +56,8 @@ export default function Page() {
         >
           <TextInput
             label="Task Title"
-            value={taskTitle}
-            onChangeText={setTaskTitle}
+            value={taskContent}
+            onChangeText={setTaskContent}
           />
         </KeyboardAvoidingView>
         <Button

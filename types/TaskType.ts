@@ -1,5 +1,5 @@
 export type TaskType = {
-    id: number;
+    id: string;
     taskContent: string;
     isCompleted: boolean;
     updateTaskContent(newContent: string): void;
